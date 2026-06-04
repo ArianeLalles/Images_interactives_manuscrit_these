@@ -5,7 +5,7 @@
 <script>
 async function loadData() {
 
-    const res = await fetch("STATREF_points.csv");
+    const res = await fetch("STATREF_points_BAC2WALK_wearables_04.csv");
     const text = await res.text();
 
     const lines = text.split("\n").slice(1);
