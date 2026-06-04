@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>3D Point Cloud</title>
+  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+</head>
+
+<body style="margin:0;">
+
+<div id="plot" style="width:100vw;height:100vh;"></div>
+
+<script>
+async function loadPLY() {
+
+    const response = await fetch("STATREF.ply");
+    const text = await response.text();
+
+    const lines = text.split("\n");
+
+    let header = true;
+    let dataStart = 0;
+
+    // trouver fin header
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].includes("end_header")) {
+            dataStart = i + 1;
+            break;
+        }
+    }
+
+    let x = [], y = [], z = [], c = [];
+
+    for (let i = dataStart; i < lines.length; i++) {
+        let vals = lines[i].trim().split(" ");
+        if (vals.length < 3) continue;
+
+        x.push(parseFloat(vals[0]));
+        y.push(parseFloat(vals[1]));
+        z.push(parseFloat(vals[2]));
+        c.push(parseInt(vals[3])); // label RGB simplifié
+    }
+
+    let trace = {
+        x: x,
+        y: y,
+        z: z,
+        mode: 'markers',
+        type: 'scatter3d',
+        marker: {
+            size: 3,
+            color: c,
+            colorscale: 'Viridis'
+        }
+    };
+
+    Plotly.newPlot('plot', [trace], {
+        margin: {l:0,r:0,b:0,t:0}
+    });
+}
+
+loadPLY();
+</script>
+
+</body>
+</html>
