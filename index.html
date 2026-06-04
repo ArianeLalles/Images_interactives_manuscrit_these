@@ -25,28 +25,28 @@ async function loadData() {
     }
 
     const traceMOD = {
-        x: x.filter((_,i)=>c[i]==0),
-        y: y.filter((_,i)=>c[i]==0),
-        z: z.filter((_,i)=>c[i]==0),
-        mode: 'markers+text',
-        type: 'scatter3d',
-        name: 'Model',
-        text: name.filter((_,i)=>c[i]==0),
-        textposition: 'top center',
-        marker: { size: 4, color: 'blue' }
-    };
+    x: x.filter((_,i)=>c[i]==0),
+    y: y.filter((_,i)=>c[i]==0),
+    z: z.filter((_,i)=>c[i]==0),
+    mode: 'markers',
+    type: 'scatter3d',
+    name: 'Model',
+    hovertext: name.filter((_,i)=>c[i]==0),
+    hoverinfo: 'text',
+    marker: { size: 4, color: 'blue' }
+};
 
     const traceREF = {
-        x: x.filter((_,i)=>c[i]==1),
-        y: y.filter((_,i)=>c[i]==1),
-        z: z.filter((_,i)=>c[i]==1),
-        mode: 'markers+text',
-        type: 'scatter3d',
-        name: 'Reference',
-        text: name.filter((_,i)=>c[i]==1),
-        textposition: 'top center',
-        marker: { size: 4, color: 'red' }
-    };
+    x: x.filter((_,i)=>c[i]==1),
+    y: y.filter((_,i)=>c[i]==1),
+    z: z.filter((_,i)=>c[i]==1),
+    mode: 'markers',
+    type: 'scatter3d',
+    name: 'Reference',
+    hovertext: name.filter((_,i)=>c[i]==1),
+    hoverinfo: 'text',
+    marker: { size: 4, color: 'red' }
+};
 
     Plotly.newPlot('plot', [traceMOD, traceREF], {
         legend: { orientation: "h" }
