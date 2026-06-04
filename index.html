@@ -1,32 +1,57 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>3D Viewer</title>
-  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
-  <style>
-    body { margin: 0; font-family: Arial; }
-    #topbar {
-      position: absolute;
-      z-index: 10;
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-      margin: 10px;
-    }
-  </style>
-</head>
-
-<body>
-
-<div id="topbar">
-  <label>Subject: </label>
-  <select id="subjectSelect"></select>
-</div>
+<script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
 
 <div id="plot" style="width:100vw;height:100vh;"></div>
 
-<script src="viewer.js"></script>
+<script>
+async function loadData() {
 
-</body>
-</html>
+    const res = await fetch("STATREF_points.csv");
+    const text = await res.text();
+
+    const lines = text.split("\n").slice(1);
+
+    let x=[], y=[], z=[], c=[], name=[];
+
+    for (let l of lines) {
+        let s = l.split(",");
+
+        if (s.length < 5) continue;
+
+        x.push(+s[0]);
+        y.push(+s[1]);
+        z.push(+s[2]);
+        c.push(+s[3]);
+        name.push(s[4]);
+    }
+
+    const traceMOD = {
+        x: x.filter((_,i)=>c[i]==0),
+        y: y.filter((_,i)=>c[i]==0),
+        z: z.filter((_,i)=>c[i]==0),
+        mode: 'markers+text',
+        type: 'scatter3d',
+        name: 'Model',
+        text: name.filter((_,i)=>c[i]==0),
+        textposition: 'top center',
+        marker: { size: 4, color: 'blue' }
+    };
+
+    const traceREF = {
+        x: x.filter((_,i)=>c[i]==1),
+        y: y.filter((_,i)=>c[i]==1),
+        z: z.filter((_,i)=>c[i]==1),
+        mode: 'markers+text',
+        type: 'scatter3d',
+        name: 'Reference',
+        text: name.filter((_,i)=>c[i]==1),
+        textposition: 'top center',
+        marker: { size: 4, color: 'red' }
+    };
+
+    Plotly.newPlot('plot', [traceMOD, traceREF], {
+        legend: { orientation: "h" }
+    });
+}
+
+loadData();
+</script>
