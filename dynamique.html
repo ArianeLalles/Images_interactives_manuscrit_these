@@ -55,15 +55,33 @@ function initPlot(){
         plot_bgcolor: "white",
 
         scene: {
-            aspectmode: "data",
 
-            camera: {
-                eye: { x: 1.8, y: 1.8, z: 1.2 }
-            },
+        aspectmode: "data",
 
-            xaxis: { title: "ML", gridcolor: "#eee" },
-            yaxis: { title: "AP", gridcolor: "#eee" },
-            zaxis: { title: "V",  gridcolor: "#eee" }
+        camera: {
+            eye: { x: 1.8, y: 1.8, z: 1.2 }
+        },
+
+        xaxis: {
+            title: "ML",
+            gridcolor: "#eee",
+            range: [-0.5, 0.5],
+            autorange: false
+        },
+
+        yaxis: {
+            title: "AP",
+            gridcolor: "#eee",
+            range: [-0.8, 0.8],
+            autorange: false
+        },
+
+        zaxis: {
+            title: "V",
+            gridcolor: "#eee",
+            range: [0.5, 1.2],
+            autorange: false
+        }
         }
     };
 
