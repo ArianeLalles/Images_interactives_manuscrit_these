@@ -24,7 +24,10 @@ let walker;
 
 async function loadData(){
 
-    walker = await fetch("marche2_BAC2WALK_wearables_04.json").then(r => r.json());
+    const res = await fetch("marche2_BAC2WALK_wearables_04.json");
+const text = await res.text();
+
+console.log(text.slice(0, 50));
 
     console.log("walker:", walker);
     console.log("frames type:", typeof walker.frames);
