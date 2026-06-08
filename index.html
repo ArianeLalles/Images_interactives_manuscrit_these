@@ -1,68 +1,27 @@
-<script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+<!DOCTYPE html>
 
-<div id="plot" style="width:100vw;height:100vh;"></div>
+<html>
 
-<script>
-async function loadData() {
+<body>
 
-    const res = await fetch("STATREF_points_BAC2WALK_wearables_04.csv");
-    const text = await res.text();
+<h1>Interactive figures</h1>
 
-    const lines = text.split("\n").slice(1);
+<ul>
 
-    let x=[], y=[], z=[], c=[], name=[];
+<li>
+<a href="statique.html">
+Static visualization
+</a>
+</li>
 
-    for (let l of lines) {
-        let s = l.split(",");
+<li>
+<a href="dynamique.html">
+Dynamic visualization
+</a>
+</li>
 
-        if (s.length < 5) continue;
+</ul>
 
-        x.push(+s[0]);
-        y.push(+s[1]);
-        z.push(+s[2]);
-        c.push(+s[3]);
-        name.push(s[4]);
-    }
+</body>
 
-    const traceMOD = {
-    x: x.filter((_,i)=>c[i]==0),
-    y: y.filter((_,i)=>c[i]==0),
-    z: z.filter((_,i)=>c[i]==0),
-
-    mode: 'markers+text',
-    type: 'scatter3d',
-
-    name: 'Model',
-
-    text: name.filter((_,i)=>c[i]==0),
-    textposition: 'top center',
-
-    marker: {
-        size: 4,
-        color: 'blue'
-    }
-};
-
-    const traceREF = {
-    x: x.filter((_,i)=>c[i]==1),
-    y: y.filter((_,i)=>c[i]==1),
-    z: z.filter((_,i)=>c[i]==1),
-
-    mode: 'markers',
-    type: 'scatter3d',
-
-    name: 'Reference',
-
-    marker: {
-        size: 4,
-        color: 'red'
-    }
-};
-
-    Plotly.newPlot('plot', [traceMOD, traceREF], {
-        legend: { orientation: "h" }
-    });
-}
-
-loadData();
-</script>
+</html>
