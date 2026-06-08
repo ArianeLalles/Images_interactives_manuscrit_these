@@ -132,14 +132,11 @@ function updateFrame(tt){
     const pts = extractPoints(frame);
 
     const trace = {
-
         x: pts.x,
         y: pts.y,
         z: pts.z,
-
         text: pts.labels,
-
-        mode: "markers+lines",   
+        mode: "markers+lines",
         type: "scatter3d",
 
         line: {
@@ -149,21 +146,41 @@ function updateFrame(tt){
 
         marker: {
             size: 3,
-            color: pts.z,       
+            color: pts.z,
             colorscale: "Viridis",
             opacity: 0.85
-        },
-
-        name: "Walker"
+        }
     };
 
-    const layoutUpdate = {
-        uirevision: "fixed"
-    };
-
-    Plotly.react("plot", [trace], layoutUpdate);
+    Plotly.react("plot", [trace], {
+        margin: {l:0, r:0, t:0, b:0},
+        uirevision: "fixed",
+        scene: {
+            aspectmode: "data",
+            xaxis: {
+                title: "ML",
+                range: [-0.5, 0.5],
+                autorange: false,
+                gridcolor: "#eee"
+            },
+            yaxis: {
+                title: "AP",
+                range: [-0.8, 0.8],
+                autorange: false,
+                gridcolor: "#eee"
+            },
+            zaxis: {
+                title: "V",
+                range: [0.5, 1.2],
+                autorange: false,
+                gridcolor: "#eee"
+            },
+            camera: {
+                eye: { x: 1.8, y: 1.8, z: 1.2 }
+            }
+        }
+    });
 }
-
 loadData();
 
 </script>
