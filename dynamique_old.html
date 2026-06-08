@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Walker animation</title>
+
 <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
 </head>
 
@@ -21,8 +22,6 @@
 
 let walker;
 
-let currentFrame = 0;
-
 async function loadData(){
 
     const res = await fetch("marche2_BAC2WALK_wearables_04.json");
@@ -37,7 +36,9 @@ async function loadData(){
         updateFrame(Number(e.target.value));
     });
 
+    // Layout initial (IMPORTANT pour stabilité)
     initPlot();
+
     updateFrame(0);
 }
 
@@ -45,18 +46,42 @@ function initPlot(){
 
     const layout = {
         margin: {l:0, r:0, t:0, b:0},
-        uirevision: "fixed",
+
+        legend: {orientation: "h"},
+
+        uirevision: "fixed", 
+
+        paper_bgcolor: "white",
+        plot_bgcolor: "white",
 
         scene: {
-            aspectmode: "cube",
 
-            xaxis: { title: "ML", range: [-0.5, 0.5], gridcolor: "#eee" },
-            yaxis: { title: "AP", range: [-0.8, 0.8], gridcolor: "#eee" },
-            zaxis: { title: "V",  range: [-0.2, 1.2], gridcolor: "#eee" },
+        aspectmode: "cube",
 
-            camera: {
-                eye: { x: 1.8, y: 1.8, z: 1.2 }
-            }
+        camera: {
+            eye: { x: 1.8, y: 1.8, z: 1.2 }
+        },
+
+        xaxis: {
+            title: "ML",
+            gridcolor: "#eee",
+            range: [-0.5, 0.5],
+            autorange: false
+        },
+
+        yaxis: {
+            title: "AP",
+            gridcolor: "#eee",
+            range: [-0.8, 0.8],
+            autorange: false
+        },
+
+        zaxis: {
+            title: "V",
+            gridcolor: "#eee",
+            range: [-0.2, 1.2],
+            autorange: false
+        }
         }
     };
 
@@ -66,9 +91,9 @@ function initPlot(){
     });
 }
 
-function extractPoints(frame, side){
+function extractPoints(frame){
 
-    let x = [], y = [], z = [];
+    let x = [], y = [], z = [], labels = [];
 
     const isVec3 = (p) =>
         Array.isArray(p) &&
@@ -79,80 +104,83 @@ function extractPoints(frame, side){
 
         if(blockName === "t" || blockName === "AxeCentral") return;
 
-        Object.entries(block || {}).forEach(([method, sideData]) => {
+        Object.entries(block || {}).forEach(([side, sideData]) => {
 
-            if(!sideData || !sideData[side]) return;
-
-            Object.entries(sideData[side]).forEach(([name, pos]) => {
+            Object.entries(sideData || {}).forEach(([name, pos]) => {
 
                 if(!isVec3(pos)) return;
 
                 x.push(pos[0]);
                 y.push(pos[1]);
                 z.push(pos[2]);
+
+                labels.push(`${blockName}_${side}_${name}`);
             });
         });
     });
 
-    return {x, y, z};
-}
-
-function makeTrace(frame, side, color){
-
-    const pts = extractPoints(frame, side);
-
-    return {
-        x: pts.x,
-        y: pts.y,
-        z: pts.z,
-
-        mode: "markers+lines",
-        type: "scatter3d",
-        name: side,
-
-        line: {
-            width: 2,
-            color: color
-        },
-
-        marker: {
-            size: 3,
-            color: color,
-            opacity: 0.85
-        }
-    };
+    return {x, y, z, labels};
 }
 
 function updateFrame(tt){
-
-    currentFrame = tt;
 
     document.getElementById("frameLabel").innerText = tt;
 
     const frame = walker.frames[String(tt)];
     if(!frame) return;
 
-    const traceD = makeTrace(frame, "D", "red");
-    const traceG = makeTrace(frame, "G", "blue");
+    const pts = extractPoints(frame);
 
-    Plotly.react("plot", [traceD, traceG], {
+    const trace = {
+        x: pts.x,
+        y: pts.y,
+        z: pts.z,
+        text: pts.labels,
+        mode: "markers+lines",
+        type: "scatter3d",
+
+        line: {
+            width: 2,
+            color: "rgba(120,120,120,0.4)"
+        },
+
+        marker: {
+            size: 3,
+            color: pts.z,
+            colorscale: "Viridis",
+            opacity: 0.85
+        }
+    };
+
+    Plotly.react("plot", [trace], {
         margin: {l:0, r:0, t:0, b:0},
         uirevision: "fixed",
-
         scene: {
             aspectmode: "cube",
-
-            xaxis: { title: "ML", range: [-0.5, 0.5], gridcolor: "#eee" },
-            yaxis: { title: "AP", range: [-0.8, 0.8], gridcolor: "#eee" },
-            zaxis: { title: "V",  range: [-0.2, 1.2], gridcolor: "#eee" },
-
+            xaxis: {
+                title: "ML",
+                range: [-0.5, 0.5],
+                autorange: false,
+                gridcolor: "#eee"
+            },
+            yaxis: {
+                title: "AP",
+                range: [-0.8, 0.8],
+                autorange: false,
+                gridcolor: "#eee"
+            },
+            zaxis: {
+                title: "V",
+                range: [-0.2, 1.2],
+                autorange: false,
+                gridcolor: "#eee"
+            },
             camera: {
                 eye: { x: 1.8, y: 1.8, z: 1.2 }
             }
         }
     });
 }
-
 loadData();
 
 </script>
