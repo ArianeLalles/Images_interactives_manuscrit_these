@@ -25,14 +25,9 @@ let walker;
 async function loadData(){
 
     const res = await fetch("marche2_BAC2WALK_wearables_04.json");
-const text = await res.text();
+    walker = await res.json(); 
 
-console.log(text.slice(0, 50));
-
-    console.log("walker:", walker);
-    console.log("frames type:", typeof walker.frames);
-    console.log("is array:", Array.isArray(walker.frames));
-    console.log("frame 0:", walker.frames?.[0]);
+    console.log("loaded frames:", walker.frames.length);
 
     const slider = document.getElementById("slider");
     slider.max = walker.nFrames - 1;
@@ -41,7 +36,41 @@ console.log(text.slice(0, 50));
         updateFrame(Number(e.target.value));
     });
 
+    // Layout initial (IMPORTANT pour stabilité)
+    initPlot();
+
     updateFrame(0);
+}
+
+function initPlot(){
+
+    const layout = {
+        margin: {l:0, r:0, t:0, b:0},
+
+        legend: {orientation: "h"},
+
+        uirevision: "fixed", 
+
+        paper_bgcolor: "white",
+        plot_bgcolor: "white",
+
+        scene: {
+            aspectmode: "data",
+
+            camera: {
+                eye: { x: 1.8, y: 1.8, z: 1.2 }
+            },
+
+            xaxis: { title: "ML", gridcolor: "#eee" },
+            yaxis: { title: "AP", gridcolor: "#eee" },
+            zaxis: { title: "V",  gridcolor: "#eee" }
+        }
+    };
+
+    Plotly.newPlot("plot", [], layout, {
+        responsive: true,
+        displayModeBar: false
+    });
 }
 
 function extractPoints(frame){
@@ -72,18 +101,15 @@ function extractPoints(frame){
         });
     });
 
-    return {x,y,z,labels};
+    return {x, y, z, labels};
 }
+
 function updateFrame(tt){
 
     document.getElementById("frameLabel").innerText = tt;
 
-    const frame = walker.frames[tt];
-
-    if(!frame){
-        console.warn("Frame missing:", tt);
-        return;
-    }
+    const frame = walker.frames[String(tt)];
+    if(!frame) return;
 
     const pts = extractPoints(frame);
 
@@ -94,30 +120,30 @@ function updateFrame(tt){
         z: pts.z,
 
         text: pts.labels,
-        mode: "markers",
+
+        mode: "markers+lines",   
         type: "scatter3d",
 
+        line: {
+            width: 2,
+            color: "rgba(120,120,120,0.4)"
+        },
+
         marker: {
-            size: 4,
-            color: "blue"
+            size: 3,
+            color: pts.z,       
+            colorscale: "Viridis",
+            opacity: 0.85
         },
 
         name: "Walker"
     };
 
-    Plotly.react(
-        "plot",
-        [trace],
-        {
-            legend: {orientation:"h"},
-            scene: {
-                aspectmode: "data",
-                xaxis: {title:"ML"},
-                yaxis: {title:"AP"},
-                zaxis: {title:"V"}
-            }
-        }
-    );
+    const layoutUpdate = {
+        uirevision: "fixed"
+    };
+
+    Plotly.react("plot", [trace], layoutUpdate);
 }
 
 loadData();
