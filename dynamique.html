@@ -26,6 +26,11 @@ async function loadData(){
 
     walker = await fetch("walker.json").then(r => r.json());
 
+console.log("walker:", walker);
+console.log("frames type:", typeof walker.frames);
+console.log("is array:", Array.isArray(walker.frames));
+console.log("frame 0:", walker.frames?.[0]);
+
     const slider = document.getElementById("slider");
     slider.max = walker.nFrames - 1;
 
