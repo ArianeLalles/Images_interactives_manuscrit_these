@@ -40,34 +40,32 @@ function extractPoints(frame){
 
     let x = [], y = [], z = [], labels = [];
 
-    const sides = ["D","G"];
+    const isVec3 = (p) =>
+        Array.isArray(p) &&
+        p.length === 3 &&
+        p.every(v => typeof v === "number" && isFinite(v));
 
-    // loop all methods (mod / ref / castellaz etc.)
-    Object.keys(frame).forEach(method => {
+    Object.entries(frame).forEach(([blockName, block]) => {
 
-        if(method === "t" || method === "AxeCentral") return;
+        if(blockName === "t" || blockName === "AxeCentral") return;
 
-        sides.forEach(side => {
+        Object.entries(block || {}).forEach(([side, sideData]) => {
 
-            const block = frame[method]?.[side];
-            if(!block) return;
+            Object.entries(sideData || {}).forEach(([name, pos]) => {
 
-            Object.entries(block).forEach(([name,pos]) => {
-
-                if(!Array.isArray(pos) || pos.length !== 3) return;
+                if(!isVec3(pos)) return;
 
                 x.push(pos[0]);
                 y.push(pos[1]);
                 z.push(pos[2]);
 
-                labels.push(method + "_" + side + "_" + name);
+                labels.push(`${blockName}_${side}_${name}`);
             });
         });
     });
 
     return {x,y,z,labels};
 }
-
 function updateFrame(tt){
 
     document.getElementById("frameLabel").innerText = tt;
