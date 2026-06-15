@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Walker animation</title>
+<script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+</head>
+
+<body>
+
+<div style="padding:10px">
+    Frame :
+    <span id="frameLabel">0</span>
+
+    <input id="slider" type="range" min="0" max="0" value="0" style="width:500px">
+</div>
+
+<div id="plot" style="width:100vw;height:90vh;"></div>
+
+<script>
+
+let walker;
+
+let currentFrame = 0;
+
+async function loadData(){
+
+    const res = await fetch("marche2_BAC2WALK_wearables_04.json");
+    walker = await res.json(); 
+
+    console.log("loaded frames:", walker.frames.length);
+
+    const slider = document.getElementById("slider");
+    slider.max = walker.nFrames - 1;
+
+    slider.addEventListener("input", e => {
+        updateFrame(Number(e.target.value));
+    });
+
+    initPlot();
+    updateFrame(0);
+}
+
+function initPlot(){
+
+    const layout = {
+        margin: {l:0, r:0, t:0, b:0},
+        uirevision: "fixed",
+
+        scene: {
+            aspectmode: "cube",
+
+            xaxis: { title: "ML", range: [-0.5, 0.5], gridcolor: "#eee" },
+            yaxis: { title: "AP", range: [-0.8, 0.8], gridcolor: "#eee" },
+            zaxis: { title: "V",  range: [-0.1, 1.2], gridcolor: "#eee" },
+
+            camera: {
+                eye: { x: 1.8, y: 1.8, z: 1.2 }
+            }
+        }
+    };
+
+    Plotly.newPlot("plot", [], layout, {
+        responsive: true,
+        displayModeBar: false
+    });
+}
+
+function extractPoints(frame, type){
+
+    let x = [], y = [], z = [];
+
+    const blocks = ["ref", "mod"];
+
+    blocks.forEach(blockName => {
+
+        const block = frame[blockName];
+        if(!block) return;
+
+        const side = block[type];
+        if(!side) return;
+
+        Object.values(side).forEach(pos => {
+
+            if(
+                Array.isArray(pos) &&
+                pos.length === 3 &&
+                pos.every(v => typeof v === "number")
+            ){
+                x.push(pos[0]);
+                y.push(pos[1]);
+                z.push(pos[2]);
+            }
+        });
+    });
+
+    return {x, y, z};
+}
+
+function makeTrace(frame, side, color){
+
+    const pts = extractPoints(frame, side);
+
+    return {
+        x: pts.x,
+        y: pts.y,
+        z: pts.z,
+
+        mode: "markers+lines",
+        type: "scatter3d",
+        name: side,
+
+        line: {
+            width: 2,
+            color: color
+        },
+
+        marker: {
+            size: 3,
+            color: color,
+            opacity: 0.85
+        }
+    };
+}
+
+function updateFrame(tt){
+
+    currentFrame = tt;
+
+    document.getElementById("frameLabel").innerText = tt;
+
+    const frame = walker.frames[tt];
+    if(!frame) {
+        console.warn("Frame manquante:", tt);
+        return;
+    }
+
+    console.log("frame keys:", Object.keys(frame));
+
+    const traceD = makeTrace(frame, "D", "red");
+    const traceG = makeTrace(frame, "G", "blue");
+
+    console.log("D points:", traceD.x.length, "G points:", traceG.x.length);
+
+    Plotly.react("plot", [traceD, traceG], {
+        margin: {l:0, r:0, t:0, b:0},
+        uirevision: "fixed",
+
+        scene: {
+            aspectmode: "cube",
+
+            xaxis: { title: "ML", range: [-0.5, 0.5], gridcolor: "#eee" },
+            yaxis: { title: "AP", range: [-0.8, 0.8], gridcolor: "#eee" },
+            zaxis: { title: "V",  range: [-0.1, 1.2], gridcolor: "#eee" },
+
+            camera: {
+                eye: { x: 1.8, y: 1.8, z: 1.2 }
+            }
+        }
+    });
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>

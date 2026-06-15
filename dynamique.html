@@ -52,7 +52,7 @@ function initPlot(){
 
             xaxis: { title: "ML", range: [-0.5, 0.5], gridcolor: "#eee" },
             yaxis: { title: "AP", range: [-0.8, 0.8], gridcolor: "#eee" },
-            zaxis: { title: "V",  range: [-0.2, 1.2], gridcolor: "#eee" },
+            zaxis: { title: "V",  range: [-0.1, 1.2], gridcolor: "#eee" },
 
             camera: {
                 eye: { x: 1.8, y: 1.8, z: 1.2 }
@@ -66,59 +66,104 @@ function initPlot(){
     });
 }
 
-function extractPoints(frame, type){
+function extractBlockPoints(frame, blockName, side){
 
     let x = [], y = [], z = [];
 
-    const blocks = ["ref", "mod"];
+    const block = frame[blockName];
+    if(!block || !block[side]) return {x, y, z};
 
-    blocks.forEach(blockName => {
+    Object.values(block[side]).forEach(pos => {
 
-        const block = frame[blockName];
-        if(!block) return;
-
-        const side = block[type];
-        if(!side) return;
-
-        Object.values(side).forEach(pos => {
-
-            if(
-                Array.isArray(pos) &&
-                pos.length === 3 &&
-                pos.every(v => typeof v === "number")
-            ){
-                x.push(pos[0]);
-                y.push(pos[1]);
-                z.push(pos[2]);
-            }
-        });
+        if(
+            Array.isArray(pos) &&
+            pos.length === 3 &&
+            pos.every(v => Number.isFinite(v))
+        ){
+            x.push(pos[0]);
+            y.push(pos[1]);
+            z.push(pos[2]);
+        }
     });
 
     return {x, y, z};
 }
 
-function makeTrace(frame, side, color){
+function makeMarkers(frame, blockName, side, color, symbol){
 
-    const pts = extractPoints(frame, side);
+    const pts = extractBlockPoints(frame, blockName, side);
 
     return {
         x: pts.x,
         y: pts.y,
         z: pts.z,
 
-        mode: "markers+lines",
         type: "scatter3d",
-        name: side,
+        mode: "markers",
 
-        line: {
-            width: 2,
-            color: color
-        },
+        name: `${blockName}-${side}`,
 
         marker: {
-            size: 3,
+            size: 4,
             color: color,
-            opacity: 0.85
+            symbol: symbol,
+            opacity: 0.9
+        }
+    };
+}
+
+function makeCtHt(frame, blockName, side, color){
+
+    const block = frame[blockName];
+    if(!block || !block[side]) return null;
+
+    const Ct = block[side].Ct;
+    const Ht = block[side].Ht;
+
+    if(!Ct || !Ht) return null;
+
+    return {
+        x: [Ct[0], Ht[0]],
+        y: [Ct[1], Ht[1]],
+        z: [Ct[2], Ht[2]],
+
+        type: "scatter3d",
+        mode: "lines",
+
+        showlegend: false,
+
+        line: {
+            color: color,
+            width: 5
+        }
+    };
+}
+
+function makeGRF(frame, side, color){
+
+    const block = frame.ref;
+    if(!block || !block[side]) return null;
+
+    const COP = block[side].COP;
+    const GRF = block[side].GRF;
+
+    if(!COP || !GRF) return null;
+
+    const scale = 0.001;
+
+    return {
+        x: [COP[0], COP[0] + scale * GRF[0]],
+        y: [COP[1], COP[1] + scale * GRF[1]],
+        z: [COP[2], COP[2] + scale * GRF[2]],
+
+        type: "scatter3d",
+        mode: "lines",
+
+        name: `GRF-${side}`,
+
+        line: {
+            color: color,
+            width: 6
         }
     };
 }
@@ -126,40 +171,80 @@ function makeTrace(frame, side, color){
 function updateFrame(tt){
 
     currentFrame = tt;
-
     document.getElementById("frameLabel").innerText = tt;
 
     const frame = walker.frames[tt];
-    if(!frame) {
-        console.warn("Frame manquante:", tt);
-        return;
-    }
+    if(!frame) return;
 
-    console.log("frame keys:", Object.keys(frame));
+    const traces = [];
 
-    const traceD = makeTrace(frame, "D", "red");
-    const traceG = makeTrace(frame, "G", "blue");
+    ["D", "G"].forEach(side => {
 
-    console.log("D points:", traceD.x.length, "G points:", traceG.x.length);
+        const color = side === "D" ? "red" : "blue";
 
-    Plotly.react("plot", [traceD, traceG], {
+        // ref = ronds
+        traces.push(
+            makeMarkers(frame, "ref", side, color, "circle")
+        );
+
+        // mod = carrés
+        if(frame.mod){
+            traces.push(
+                makeMarkers(frame, "mod", side, color, "square")
+            );
+        }
+
+        // castellaz = étoiles
+        if(frame.castellaz){
+            traces.push(
+                makeMarkers(frame, "castellaz", side, color, "star")
+            );
+        }
+
+        // segment Ct-Ht uniquement pour ref
+        const ctht = makeCtHt(frame, "ref", side, color);
+        if(ctht) traces.push(ctht);
+
+        // GRF
+        const grf = makeGRF(frame, side, color);
+        if(grf) traces.push(grf);
+    });
+
+    Plotly.react("plot", traces, {
         margin: {l:0, r:0, t:0, b:0},
         uirevision: "fixed",
 
         scene: {
             aspectmode: "cube",
 
-            xaxis: { title: "ML", range: [-0.5, 0.5], gridcolor: "#eee" },
-            yaxis: { title: "AP", range: [-0.8, 0.8], gridcolor: "#eee" },
-            zaxis: { title: "V",  range: [-0.2, 1.2], gridcolor: "#eee" },
+            xaxis: {
+                title: "ML",
+                range: [-0.5, 0.5],
+                gridcolor: "#eee"
+            },
+
+            yaxis: {
+                title: "AP",
+                range: [-0.8, 0.8],
+                gridcolor: "#eee"
+            },
+
+            zaxis: {
+                title: "V",
+                range: [-0.1, 1.2],
+                gridcolor: "#eee"
+            },
 
             camera: {
-                eye: { x: 1.8, y: 1.8, z: 1.2 }
+                eye: {
+                    x: 1.8,
+                    y: 1.8,
+                    z: 1.2
+                }
             }
         }
     });
 }
-
 loadData();
 
 </script>
