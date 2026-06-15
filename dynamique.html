@@ -66,31 +66,31 @@ function initPlot(){
     });
 }
 
-function extractPoints(frame, side){
+function extractPoints(frame, type){
 
     let x = [], y = [], z = [];
 
-    const isVec3 = (p) =>
-        Array.isArray(p) &&
-        p.length === 3 &&
-        p.every(v => typeof v === "number" && isFinite(v));
+    const blocks = ["ref", "mod"];
 
-    Object.entries(frame).forEach(([blockName, block]) => {
+    blocks.forEach(blockName => {
 
-        if(blockName === "t" || blockName === "AxeCentral") return;
+        const block = frame[blockName];
+        if(!block) return;
 
-        Object.entries(block || {}).forEach(([method, sideData]) => {
+        const side = block[type];
+        if(!side) return;
 
-            if(!sideData || !sideData[side]) return;
+        Object.values(side).forEach(pos => {
 
-            Object.entries(sideData[side]).forEach(([name, pos]) => {
-
-                if(!isVec3(pos)) return;
-
+            if(
+                Array.isArray(pos) &&
+                pos.length === 3 &&
+                pos.every(v => typeof v === "number")
+            ){
                 x.push(pos[0]);
                 y.push(pos[1]);
                 z.push(pos[2]);
-            });
+            }
         });
     });
 
