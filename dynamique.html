@@ -129,11 +129,18 @@ function updateFrame(tt){
 
     document.getElementById("frameLabel").innerText = tt;
 
-    const frame = walker.frames[String(tt)];
-    if(!frame) return;
+    const frame = walker.frames[tt];
+    if(!frame) {
+        console.warn("Frame manquante:", tt);
+        return;
+    }
+
+    console.log("frame keys:", Object.keys(frame));
 
     const traceD = makeTrace(frame, "D", "red");
     const traceG = makeTrace(frame, "G", "blue");
+
+    console.log("D points:", traceD.x.length, "G points:", traceG.x.length);
 
     Plotly.react("plot", [traceD, traceG], {
         margin: {l:0, r:0, t:0, b:0},
