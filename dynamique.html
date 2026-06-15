@@ -73,18 +73,21 @@ function extractBlockPoints(frame, blockName, side){
     const block = frame[blockName];
     if(!block || !block[side]) return {x, y, z};
 
-    Object.values(block[side]).forEach(pos => {
+    Object.entries(block[side]).forEach(([name, pos]) => {
 
-        if(
-            Array.isArray(pos) &&
-            pos.length === 3 &&
-            pos.every(v => Number.isFinite(v))
-        ){
-            x.push(pos[0]);
-            y.push(pos[1]);
-            z.push(pos[2]);
-        }
-    });
+    // Ne pas afficher COP ni GRF comme marqueurs
+    if (name === "COP" || name === "GRF") return;
+
+    if (
+        Array.isArray(pos) &&
+        pos.length === 3 &&
+        pos.every(v => Number.isFinite(v))
+    ){
+        x.push(pos[0]);
+        y.push(pos[1]);
+        z.push(pos[2]);
+    }
+});
 
     return {x, y, z};
 }
@@ -197,7 +200,7 @@ function updateFrame(tt){
         // castellaz = étoiles
         if(frame.castellaz){
             traces.push(
-                makeMarkers(frame, "castellaz", side, color, "star")
+                makeMarkers(frame, "castellaz", side, color, "cross")
             );
         }
 
